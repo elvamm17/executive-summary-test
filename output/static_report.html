@@ -1,0 +1,202 @@
+
+    <!doctype html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <title>Wei Long NA Management Review</title>
+      <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+      
+    <style>
+    body { margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; background:#f6f7f9; color:#1f2933; }
+    main { max-width:1280px; margin:0 auto; padding:28px; }
+    h1 { margin:0 0 4px 0; font-size:32px; }
+    h2 { margin-top:34px; }
+    .caption { color:#6b7280; margin-bottom:20px; }
+    .grid { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; }
+    .wide-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:16px; }
+    .overview-grid { display:grid; grid-template-columns:0.60fr 0.40fr; gap:16px; align-items:stretch; }
+    .metric-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
+    .card { background:white; border:1px solid #eceff3; border-radius:14px; padding:16px; box-shadow:0 8px 24px rgba(15,23,42,.04); }
+    .platform-card { background:white; border:1px solid #eceff3; border-radius:14px; padding:18px; box-shadow:0 8px 24px rgba(15,23,42,.04); min-height:230px; }
+    .balanced-card { min-height:330px; display:flex; flex-direction:column; justify-content:center; }
+    .kpi-label { color:#6b7280; font-size:12px; text-transform:uppercase; letter-spacing:.04em; }
+    .kpi-value { font-size:30px; font-weight:850; margin-top:4px; }
+    .kpi-sub, .rank-meta { color:#6b7280; font-size:13px; margin-top:4px; }
+    .overview-number { font-size:40px; line-height:1.05; font-weight:900; color:#d71920; margin:4px 0 18px 0; }
+    .overview-target { font-size:28px; line-height:1.1; font-weight:850; color:#1f2933; margin:4px 0 0 0; }
+    .metric-line { display:flex; justify-content:space-between; align-items:baseline; gap:12px; margin:9px 0; color:#6b7280; font-size:15px; }
+    .metric-line strong { color:#1f2933; font-size:18px; white-space:nowrap; overflow:visible; text-overflow:clip; }
+    .progress-track { height:13px; background:#e5e7eb; border-radius:999px; overflow:hidden; margin:8px 0 6px 0; }
+    .progress-fill { height:13px; background:#d71920; border-radius:999px; }
+    .progress-row { display:flex; justify-content:space-between; color:#6b7280; font-size:14px; }
+    .rank-card { background:white; border:1px solid #eceff3; border-radius:14px; padding:14px; margin-bottom:10px; }
+    .rank-num { display:inline-block; background:#d71920; color:white; border-radius:999px; width:30px; height:30px; line-height:30px; text-align:center; font-weight:850; margin-right:8px; }
+    .rank-title { font-size:17px; font-weight:800; }
+    .plot { width:100%; min-height:310px; }
+    @media(max-width:900px) { .grid,.wide-grid,.overview-grid,.metric-grid { grid-template-columns:1fr; } }
+    </style>
+    
+    </head>
+    <body>
+      <main>
+        <h1>Wei Long North America Management Review</h1>
+        <div class="caption">Generated 2026-06-21 20:37 | Summary -> Platform -> Product -> Geo</div>
+
+        <section class="overview-grid">
+          <div class="card balanced-card">
+            <div class="kpi-label">Business Progress</div>
+            <div class="kpi-label" style="margin-top:16px">GMV Achievement</div>
+            <div class="kpi-value" style="color:#d71920">4.6%</div>
+            
+    <div class="progress-row"><span>Achievement</span><strong>4.6%</strong></div>
+    <div class="progress-track"><div class="progress-fill" style="width:4.6%"></div></div>
+    
+            <div class="kpi-label" style="margin-top:22px">Total GMV</div>
+            <div class="overview-number">$1,661</div>
+            <div class="kpi-label">Monthly Target</div>
+            <div class="overview-target">$36,286</div>
+            <div class="kpi-sub">2026-06 | 122 orders</div>
+          </div>
+          <div class="card balanced-card">
+    <div id="platform_mix" class="plot"></div>
+    <script>
+      Plotly.newPlot("platform_mix", [{"type": "pie", "labels": ["Amazon", "Temu", "TikTok"], "values": [340.73, 1229.52, 90.4], "hole": 0.58, "textinfo": "percent+label", "marker": {"colors": ["#d71920", "#ef4444", "#f87171", "#fca5a5", "#fecaca", "#9ca3af", "#d1d5db", "#e5e7eb", "#f3f4f6"]}}], {"title": {"text": "GMV Mix by Platform", "font": {"size": 18, "color": "#1f2933"}}, "paper_bgcolor": "white", "plot_bgcolor": "white", "font": {"family": "-apple-system, BlinkMacSystemFont, Segoe UI, sans-serif", "color": "#1f2933"}, "margin": {"l": 35, "r": 25, "t": 60, "b": 45}, "height": 310, "legend": {"orientation": "h", "x": 0.5, "xanchor": "center", "y": -0.12}}, {displayModeBar: false, responsive: true});
+    </script>
+    </div>
+        </section>
+
+        <h2>Platform Pillars</h2>
+        <section class="grid">
+            <div class="platform-card">
+              <h3>Amazon</h3>
+              <div class="metric-line"><span>GMV</span><strong>$341</strong></div>
+              <div class="metric-line"><span>Orders</span><strong>16</strong></div>
+              <div class="metric-line"><span>AOV</span><strong>$21.30</strong></div>
+              
+    <div class="progress-row"><span>Achievement</span><strong>4.4%</strong></div>
+    <div class="progress-track"><div class="progress-fill" style="width:4.4%"></div></div>
+    
+              <div class="kpi-sub">Target $7,714</div>
+            </div>
+            
+            <div class="platform-card">
+              <h3>TikTok</h3>
+              <div class="metric-line"><span>GMV</span><strong>$90</strong></div>
+              <div class="metric-line"><span>Orders</span><strong>6</strong></div>
+              <div class="metric-line"><span>AOV</span><strong>$15.07</strong></div>
+              
+    <div class="progress-row"><span>Achievement</span><strong>0.6%</strong></div>
+    <div class="progress-track"><div class="progress-fill" style="width:0.6%"></div></div>
+    
+              <div class="kpi-sub">Target $14,286</div>
+            </div>
+            
+            <div class="platform-card">
+              <h3>Temu</h3>
+              <div class="metric-line"><span>GMV</span><strong>$1,230</strong></div>
+              <div class="metric-line"><span>Orders</span><strong>100</strong></div>
+              <div class="metric-line"><span>AOV</span><strong>$12.30</strong></div>
+              
+    <div class="progress-row"><span>Achievement</span><strong>8.6%</strong></div>
+    <div class="progress-track"><div class="progress-fill" style="width:8.6%"></div></div>
+    
+              <div class="kpi-sub">Target $14,286</div>
+            </div>
+            </section>
+
+        <h2>Product Performance</h2>
+        <section class="wide-grid">
+          <div class="card">
+    <div id="sku_mix" class="plot"></div>
+    <script>
+      Plotly.newPlot("sku_mix", [{"type": "bar", "orientation": "h", "y": ["Peanut 138g", "Mala 138g", "Peanut 550g", "Thai 360g", "Hot Spicy 138g", "Sour Hot 360g", "Hot Spicy 150g", "Mala 360g", "Penut 360g", "Hot Spicy 360g"], "x": [31.1155, 40.365916666666664, 50.0975, 65.82833333333333, 82.22925000000001, 85.84416666666667, 107.65375, 134.86791666666667, 184.14458333333334, 726.73875], "marker": {"color": "#d71920"}, "text": ["$31", "$40", "$50", "$66", "$82", "$86", "$108", "$135", "$184", "$727"], "textposition": "auto"}], {"title": {"text": "SKU Mix - GMV includes shipping", "font": {"size": 18, "color": "#1f2933"}}, "paper_bgcolor": "white", "plot_bgcolor": "white", "font": {"family": "-apple-system, BlinkMacSystemFont, Segoe UI, sans-serif", "color": "#1f2933"}, "margin": {"l": 190, "r": 25, "t": 60, "b": 45}, "height": 470}, {displayModeBar: false, responsive: true});
+    </script>
+    </div>
+          <div class="card">
+    <div id="flavor_mix" class="plot"></div>
+    <script>
+      Plotly.newPlot("flavor_mix", [{"type": "pie", "labels": ["hot spicy", "mala", "penut", "sour hot", "thai", "peanut", "Unmapped SKU", "mushroom"], "values": [942.4209166666667, 201.43466666666666, 184.14458333333334, 121.87841666666667, 98.95258333333334, 81.213, 12.68, 10.17083333333333], "hole": 0.58, "textinfo": "percent+label", "marker": {"colors": ["#d71920", "#ef4444", "#f87171", "#fca5a5", "#fecaca", "#9ca3af", "#d1d5db", "#e5e7eb", "#f3f4f6"]}}], {"title": {"text": "Flavor Mix - GMV includes shipping", "font": {"size": 18, "color": "#1f2933"}}, "paper_bgcolor": "white", "plot_bgcolor": "white", "font": {"family": "-apple-system, BlinkMacSystemFont, Segoe UI, sans-serif", "color": "#1f2933"}, "margin": {"l": 35, "r": 25, "t": 60, "b": 45}, "height": 310, "legend": {"orientation": "h", "x": 0.5, "xanchor": "center", "y": -0.12}}, {displayModeBar: false, responsive: true});
+    </script>
+    </div>
+        </section>
+
+        <h2>Top SKU Leaderboard</h2>
+        <section class="grid"><div><h3>Amazon Top SKU</h3>
+
+            <div class="rank-card">
+              <span class="rank-num">1</span><span class="rank-title">Hot Spicy 360g</span>
+              <div class="rank-meta">Amazon | Master SKU 1191422.0</div>
+              <div class="rank-meta">GMV incl. shipping $129 | Product GMV $96 | Qty 10</div>
+            </div>
+            
+
+            <div class="rank-card">
+              <span class="rank-num">2</span><span class="rank-title">Penut 360g</span>
+              <div class="rank-meta">Amazon | Master SKU 1191425.0</div>
+              <div class="rank-meta">GMV incl. shipping $86 | Product GMV $64 | Qty 7</div>
+            </div>
+            
+
+            <div class="rank-card">
+              <span class="rank-num">3</span><span class="rank-title">Mala 360g</span>
+              <div class="rank-meta">Amazon | Master SKU 1191424.0</div>
+              <div class="rank-meta">GMV incl. shipping $79 | Product GMV $68 | Qty 7</div>
+            </div>
+            </div><div><h3>TikTok Top SKU</h3>
+
+            <div class="rank-card">
+              <span class="rank-num">1</span><span class="rank-title">Hot Spicy 360g</span>
+              <div class="rank-meta">TikTok | Master SKU 1191422.0</div>
+              <div class="rank-meta">GMV incl. shipping $21 | Product GMV $16 | Qty 1</div>
+            </div>
+            
+
+            <div class="rank-card">
+              <span class="rank-num">2</span><span class="rank-title">Hot Spicy 138g</span>
+              <div class="rank-meta">TikTok | Master SKU 1191417.0</div>
+              <div class="rank-meta">GMV incl. shipping $16 | Product GMV $6 | Qty 2</div>
+            </div>
+            
+
+            <div class="rank-card">
+              <span class="rank-num">3</span><span class="rank-title">Thai 360g</span>
+              <div class="rank-meta">TikTok | Master SKU 1191426.0</div>
+              <div class="rank-meta">GMV incl. shipping $16 | Product GMV $11 | Qty 1</div>
+            </div>
+            </div><div><h3>Temu Top SKU</h3>
+
+            <div class="rank-card">
+              <span class="rank-num">1</span><span class="rank-title">Hot Spicy 360g</span>
+              <div class="rank-meta">Temu | Master SKU 1191422.0</div>
+              <div class="rank-meta">GMV incl. shipping $576 | Product GMV $471 | Qty 206</div>
+            </div>
+            
+
+            <div class="rank-card">
+              <span class="rank-num">2</span><span class="rank-title">Hot Spicy 150g</span>
+              <div class="rank-meta">Temu | Master SKU 1191410.0</div>
+              <div class="rank-meta">GMV incl. shipping $108 | Product GMV $66 | Qty 30</div>
+            </div>
+            
+
+            <div class="rank-card">
+              <span class="rank-num">3</span><span class="rank-title">Penut 360g</span>
+              <div class="rank-meta">Temu | Master SKU 1191425.0</div>
+              <div class="rank-meta">GMV incl. shipping $98 | Product GMV $85 | Qty 18</div>
+            </div>
+            </div></section>
+
+        <h2>Geo Analysis</h2>
+        <section class="card">
+    <div id="geo_map" class="plot"></div>
+    <script>
+      Plotly.newPlot("geo_map", [{"type": "choropleth", "locationmode": "USA-states", "locations": ["CA", "IL", "KY", "MN", "NJ", "NM", "NY", "SC", "TN", "TX", "WI"], "z": [198.84, 8.92, 24.78, 14.89, 79.23, 7.8, 28.3, 14.89, 15.92, 8.59, 28.97], "text": ["GMV $199 | Orders 10", "GMV $9 | Orders 1", "GMV $25 | Orders 1", "GMV $15 | Orders 1", "GMV $79 | Orders 2", "GMV $8 | Orders 1", "GMV $28 | Orders 2", "GMV $15 | Orders 1", "GMV $16 | Orders 1", "GMV $9 | Orders 1", "GMV $29 | Orders 1"], "colorscale": [[0, "#fff1f2"], [1, "#d71920"]], "colorbar": {"title": "GMV"}}], {"title": {"text": "GMV by State", "font": {"size": 18, "color": "#1f2933"}}, "paper_bgcolor": "white", "plot_bgcolor": "white", "font": {"family": "-apple-system, BlinkMacSystemFont, Segoe UI, sans-serif", "color": "#1f2933"}, "margin": {"l": 35, "r": 25, "t": 60, "b": 45}, "height": 520, "geo": {"scope": "usa", "projection": {"type": "albers usa"}}}, {displayModeBar: false, responsive: true});
+    </script>
+    </section>
+
+        <h2>Bundle Performance</h2>
+        <div class="card">Bundle Mapping 尚未补充，后续用于分析各平台组包表现。</div>
+      </main>
+    </body>
+    </html>
+    

@@ -146,6 +146,20 @@ def zero_small(series: pd.Series, threshold: float = 0.01) -> pd.Series:
     return out.mask(out.abs().lt(threshold), 0.0)
 
 
+def safe_join_unique(series: pd.Series, sep: str = "/") -> str:
+    values = []
+    for value in series:
+        if pd.isna(value):
+            continue
+        text = str(value).strip()
+        if not text or text.lower() in {"nan", "none", "null"}:
+            continue
+        values.append(text)
+    if not values:
+        return ""
+    return sep.join(sorted(set(values)))
+
+
 @dataclass
 class PipelineResult:
     fact_order: pd.DataFrame
@@ -545,8 +559,8 @@ def build_fact_order(fact_product: pd.DataFrame) -> pd.DataFrame:
         "gmv_product": "sum",
         "shipping_revenue": "sum",
         "gmv_incl_shipping_tax": "sum",
-        "settlement_status": lambda s: "/".join(sorted(set(x for x in s.astype(str) if x))),
-        "source_file": lambda s: "; ".join(sorted(set(s.astype(str)))),
+        "settlement_status": safe_join_unique,
+        "source_file": lambda s: safe_join_unique(s, sep="; "),
     }
     out = fact_product.groupby(group_cols, as_index=False).agg(agg)
     for col in ("gmv_product", "shipping_revenue", "gmv_incl_shipping_tax"):
