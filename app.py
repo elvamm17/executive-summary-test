@@ -621,16 +621,16 @@ with st.sidebar:
             st.cache_data.clear()
         st.success("Pipeline complete.")
 
-st.write("MASTER EXISTS:", MASTER_DATA_PATH.exists())
-st.write("MASTER SIZE:", MASTER_DATA_PATH.stat().st_size if MASTER_DATA_PATH.exists() else 0)
-
-try:
-    xl = pd.ExcelFile(MASTER_DATA_PATH)
-    st.write("SHEETS:", xl.sheet_names)
-except Exception as e:
-    st.error("EXCEL OPEN ERROR")
-    st.exception(e)
-    raise
+with st.expander("Excel Open Diagnostics", expanded=False):
+    st.write("MASTER EXISTS:", MASTER_DATA_PATH.exists())
+    st.write("MASTER SIZE:", MASTER_DATA_PATH.stat().st_size if MASTER_DATA_PATH.exists() else 0)
+    try:
+        xl = pd.ExcelFile(MASTER_DATA_PATH)
+        st.write("SHEETS:", xl.sheet_names)
+    except Exception as e:
+        st.error("EXCEL OPEN ERROR")
+        st.exception(e)
+        traceback.print_exc()
 
 build_message = None
 pipeline_stdout = ""
@@ -672,9 +672,15 @@ else:
         st.exception(exc)
         st.stop()
 
-data = load_master_data(data_path)
+try:
+    data = load_master_data(data_path)
+except Exception as e:
+    st.error("Failed while loading master data workbook.")
+    st.exception(e)
+    traceback.print_exc()
+    st.stop()
 if not data:
-    st.error(f"Could not read master data workbook: {data_path}")
+    st.error(f"Master data workbook opened but no sheets were loaded: {data_path}")
     st.stop()
 
 if data_path.name == "sample_master_data.xlsx":
@@ -684,24 +690,35 @@ else:
 if build_message:
     st.sidebar.success(build_message)
 
-fact_order = ensure_date(data.get("Fact_Order", pd.DataFrame()))
-fact_product = ensure_date(data.get("Fact_Product", pd.DataFrame()))
-product_expanded = ensure_date(data.get("Product_Expanded", pd.DataFrame()))
-target_table = prep_target_table(data.get("Target_Table", pd.DataFrame()))
-bundle_mapping = data.get("Bundle_Mapping", pd.DataFrame())
-unit_economics = data.get("Unit_Economics", pd.DataFrame())
-
-fact_order, fact_product, product_expanded = apply_filters(fact_order, fact_product, product_expanded)
+try:
+    fact_order = ensure_date(data.get("Fact_Order", pd.DataFrame()))
+    fact_product = ensure_date(data.get("Fact_Product", pd.DataFrame()))
+    product_expanded = ensure_date(data.get("Product_Expanded", pd.DataFrame()))
+    target_table = prep_target_table(data.get("Target_Table", pd.DataFrame()))
+    bundle_mapping = data.get("Bundle_Mapping", pd.DataFrame())
+    unit_economics = data.get("Unit_Economics", pd.DataFrame())
+    fact_order, fact_product, product_expanded = apply_filters(fact_order, fact_product, product_expanded)
+except Exception as e:
+    st.error("Failed while preparing Dashboard data from master_data.xlsx.")
+    st.exception(e)
+    traceback.print_exc()
+    st.stop()
 
 page = st.sidebar.radio("Page", ["Business Overview", "Product Performance", "Geo Analysis", "Bundle Performance", "Product Quadrant"])
 
-if page == "Business Overview":
-    business_overview(fact_order, target_table)
-elif page == "Product Performance":
-    product_performance(product_expanded)
-elif page == "Geo Analysis":
-    geo_analysis(fact_order, product_expanded)
-elif page == "Bundle Performance":
-    bundle_performance(fact_product, bundle_mapping)
-else:
-    product_quadrant(product_expanded, unit_economics)
+try:
+    if page == "Business Overview":
+        business_overview(fact_order, target_table)
+    elif page == "Product Performance":
+        product_performance(product_expanded)
+    elif page == "Geo Analysis":
+        geo_analysis(fact_order, product_expanded)
+    elif page == "Bundle Performance":
+        bundle_performance(fact_product, bundle_mapping)
+    else:
+        product_quadrant(product_expanded, unit_economics)
+except Exception as e:
+    st.error(f"Dashboard render failed on page: {page}")
+    st.exception(e)
+    traceback.print_exc()
+    st.stop()
