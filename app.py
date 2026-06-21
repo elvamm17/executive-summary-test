@@ -621,6 +621,17 @@ with st.sidebar:
             st.cache_data.clear()
         st.success("Pipeline complete.")
 
+st.write("MASTER EXISTS:", MASTER_DATA_PATH.exists())
+st.write("MASTER SIZE:", MASTER_DATA_PATH.stat().st_size if MASTER_DATA_PATH.exists() else 0)
+
+try:
+    xl = pd.ExcelFile(MASTER_DATA_PATH)
+    st.write("SHEETS:", xl.sheet_names)
+except Exception as e:
+    st.error("EXCEL OPEN ERROR")
+    st.exception(e)
+    raise
+
 build_message = None
 pipeline_stdout = ""
 pipeline_stderr = ""
