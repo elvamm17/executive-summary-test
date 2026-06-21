@@ -1,5 +1,9 @@
 from __future__ import annotations
 
+import io
+import os
+import traceback
+from contextlib import redirect_stderr, redirect_stdout
 from pathlib import Path
 
 import pandas as pd
@@ -12,6 +16,17 @@ from src.pipeline import export_outputs, run_pipeline
 
 ROOT_DIR = Path(__file__).resolve().parent
 SAMPLE_MASTER_DATA_PATH = ROOT_DIR / "sample_master_data.xlsx"
+REQUIRED_REPO_FILES = [
+    "amazon_settlement.csv",
+    "tiktok_settlement.xlsx",
+    "temu_settled.xlsx",
+    "temu_unsettled.xlsx",
+    "temu_order_info.csv",
+    "temu_warehouse.xlsx",
+    "sku master.xlsx",
+    "sku_master.xlsx",
+    "target_table.xlsx",
+]
 BRAND_RED = "#d71920"
 LIGHT_BG = "#f6f7f9"
 TEXT = "#1f2933"
@@ -30,11 +45,6 @@ st.markdown(
         background: white; border: 1px solid #eceff3; border-radius: 12px;
         padding: 16px 18px; box-shadow: 0 8px 24px rgba(15, 23, 42, 0.04);
     }}
-    .hero {{
-        background: linear-gradient(135deg, #ffffff 0%, #fff5f5 100%);
-        border: 1px solid #f0d7d9; border-radius: 18px; padding: 24px;
-        box-shadow: 0 12px 30px rgba(215, 25, 32, 0.06);
-    }}
     .section-title {{ font-size: 1.35rem; font-weight: 800; margin: 1.8rem 0 0.75rem 0; }}
     .kpi-label {{ color: {MUTED}; font-size: 0.84rem; text-transform: uppercase; letter-spacing: .04em; margin-bottom: .25rem; }}
     .kpi-value {{ font-size: 2.05rem; line-height: 1.1; font-weight: 850; color: {TEXT}; }}
@@ -42,6 +52,18 @@ st.markdown(
     .card {{
         background: white; border: 1px solid #eceff3; border-radius: 14px; padding: 18px;
         box-shadow: 0 8px 24px rgba(15, 23, 42, 0.04); height: 100%;
+    }}
+    .platform-card {{
+        background: white; border: 1px solid #eceff3; border-radius: 14px; padding: 18px;
+        box-shadow: 0 8px 24px rgba(15, 23, 42, 0.04); min-height: 230px;
+    }}
+    .metric-line {{
+        display: flex; justify-content: space-between; align-items: baseline;
+        gap: 12px; margin: 0.55rem 0; color: {MUTED}; font-size: .92rem;
+    }}
+    .metric-value {{
+        color: {TEXT}; font-weight: 850; font-size: 1.05rem; white-space: nowrap;
+        overflow: visible; text-overflow: clip; max-width: none;
     }}
     .pillar-title {{ font-size: 1.2rem; font-weight: 850; color: {BRAND_RED}; margin-bottom: .8rem; }}
     .progress-track {{ height: 13px; background: #e5e7eb; border-radius: 999px; overflow: hidden; margin: 8px 0 6px 0; }}
@@ -58,7 +80,7 @@ st.markdown(
     .rank-title {{ font-size: 1.05rem; font-weight: 800; color: {TEXT}; }}
     .rank-meta {{ color: {MUTED}; font-size: .88rem; margin-top: 4px; }}
     .balanced-card {{
-        min-height: 360px;
+        min-height: 330px;
         display: flex;
         flex-direction: column;
         justify-content: center;
@@ -77,6 +99,11 @@ st.markdown(
         color: {TEXT};
         margin: 0.15rem 0 0 0;
     }}
+    [data-testid="stMetricValue"] {{
+        overflow: visible !important;
+        text-overflow: clip !important;
+        white-space: normal !important;
+    }}
     </style>
     """,
     unsafe_allow_html=True,
@@ -94,9 +121,90 @@ def load_master_data(path: Path) -> dict[str, pd.DataFrame]:
 def resolve_master_data_path() -> Path:
     if MASTER_DATA_PATH.exists():
         return MASTER_DATA_PATH
-    if SAMPLE_MASTER_DATA_PATH.exists():
-        return SAMPLE_MASTER_DATA_PATH
     return MASTER_DATA_PATH
+
+
+class PipelineExecutionError(RuntimeError):
+    def __init__(self, original: Exception, stdout_text: str, stderr_text: str, traceback_text: str):
+        super().__init__(str(original))
+        self.original = original
+        self.stdout_text = stdout_text
+        self.stderr_text = stderr_text
+        self.traceback_text = traceback_text
+
+
+def collect_startup_diagnostics() -> dict[str, object]:
+    cwd = Path.cwd()
+    cwd_files = sorted(path.name for path in cwd.iterdir())
+    root_files = sorted(path.name for path in ROOT_DIR.iterdir())
+    checks = {name: (cwd / name).exists() or (ROOT_DIR / name).exists() for name in REQUIRED_REPO_FILES}
+    diagnostics = {
+        "cwd": str(cwd),
+        "root_dir": str(ROOT_DIR),
+        "master_data_path": str(MASTER_DATA_PATH),
+        "sample_master_data_path": str(SAMPLE_MASTER_DATA_PATH),
+        "cwd_files": cwd_files,
+        "root_files": root_files,
+        "required_file_checks": checks,
+    }
+    print("=== Wei Long BI Startup Diagnostics ===")
+    print(f"cwd: {diagnostics['cwd']}")
+    print(f"root_dir: {diagnostics['root_dir']}")
+    print(f"master_data_path: {diagnostics['master_data_path']}")
+    print("cwd_files:")
+    for name in cwd_files:
+        print(f"  - {name}")
+    print("required_file_checks:")
+    for name, exists in checks.items():
+        print(f"  - {name}: {exists}")
+    print("=== End Startup Diagnostics ===")
+    return diagnostics
+
+
+def show_startup_diagnostics(diagnostics: dict[str, object]) -> None:
+    with st.expander("Startup Diagnostics", expanded=True):
+        st.write("Current working directory:", diagnostics["cwd"])
+        st.write("App root directory:", diagnostics["root_dir"])
+        st.write("Master data path:", diagnostics["master_data_path"])
+        checks = pd.DataFrame(
+            [{"file": name, "found": found} for name, found in diagnostics["required_file_checks"].items()]
+        )
+        st.dataframe(checks, use_container_width=True, hide_index=True)
+        st.write("Current directory files:")
+        st.code("\n".join(str(name) for name in diagnostics["cwd_files"]) or "(empty)")
+
+
+def show_pipeline_logs(stdout_text: str, stderr_text: str) -> None:
+    with st.expander("Pipeline Execution Logs", expanded=True):
+        st.write("stdout:")
+        st.code(stdout_text or "(no stdout)")
+        st.write("stderr:")
+        st.code(stderr_text or "(no stderr)")
+
+
+def build_master_data_if_missing() -> tuple[Path, str | None, str, str]:
+    if MASTER_DATA_PATH.exists():
+        return MASTER_DATA_PATH, None, "", ""
+    stdout_buffer = io.StringIO()
+    stderr_buffer = io.StringIO()
+    try:
+        print("=== Pipeline auto-run started ===")
+        with redirect_stdout(stdout_buffer), redirect_stderr(stderr_buffer):
+            result = run_pipeline()
+            export_outputs(result)
+        st.cache_data.clear()
+        print("=== Pipeline auto-run completed ===")
+        print(stdout_buffer.getvalue())
+        if stderr_buffer.getvalue():
+            print(stderr_buffer.getvalue())
+        return MASTER_DATA_PATH, "Generated output/master_data.xlsx from repository data files.", stdout_buffer.getvalue(), stderr_buffer.getvalue()
+    except Exception as exc:
+        traceback_text = traceback.format_exc()
+        print("=== Pipeline auto-run failed ===")
+        print(stdout_buffer.getvalue())
+        print(stderr_buffer.getvalue())
+        print(traceback_text)
+        raise PipelineExecutionError(exc, stdout_buffer.getvalue(), stderr_buffer.getvalue(), traceback_text) from exc
 
 
 def money(value: float, decimals: int = 0) -> str:
@@ -253,44 +361,40 @@ def business_overview(fact_order: pd.DataFrame, target_table: pd.DataFrame):
     orders = fact_order["order_id"].nunique()
     monthly_target = target_table[target_table["month"].eq(month_key)]["target_gmv"].sum()
     achievement = total_gmv / monthly_target if monthly_target else pd.NA
-    today = pd.Timestamp.today()
-    if month_key == today.to_period("M").strftime("%Y-%m"):
-        date_progress = today.day / today.days_in_month
-    else:
-        month_dates = fact_order.loc[fact_order["month"].eq(month_key), "order_date"].dropna()
-        date_progress = month_dates.dt.day.max() / month_dates.dt.days_in_month.max() if not month_dates.empty else pd.NA
     platform_mix = fact_order.groupby("platform", as_index=False)["gmv_incl_shipping_tax"].sum()
 
-    c1, c2 = st.columns([0.45, 0.55])
+    c1, c2 = st.columns([0.60, 0.40], gap="large")
     with c1:
-        st.markdown('<div class="card balanced-card">', unsafe_allow_html=True)
-        st.markdown(f'<div class="pillar-title">Business Progress</div><div class="kpi-label">GMV Achievement</div><div class="kpi-value" style="color:{BRAND_RED}">{pct(achievement)}</div>', unsafe_allow_html=True)
-        progress_bar("Achievement", achievement)
         st.markdown(
             f"""
+            <div class="card balanced-card">
+            <div class="pillar-title">Business Progress</div>
+            <div class="kpi-label">GMV Achievement</div>
+            <div class="kpi-value" style="color:{BRAND_RED}">{pct(achievement)}</div>
+            <div class="progress-row"><span>Achievement</span><strong>{pct(achievement)}</strong></div>
+            <div class="progress-track"><div class="progress-fill" style="width:{max(0, min((0 if pd.isna(achievement) else float(achievement)), 1)) * 100:.1f}%"></div></div>
             <div class="kpi-label" style="margin-top:1.3rem">Total GMV</div>
             <div class="overview-number">{money(total_gmv)}</div>
             <div class="kpi-label">Monthly Target</div>
             <div class="overview-target">{money(monthly_target)}</div>
             <div class="kpi-sub">{month_key} | {orders:,} orders</div>
+            </div>
             """,
             unsafe_allow_html=True,
         )
-        st.markdown("</div>", unsafe_allow_html=True)
     with c2:
-        st.markdown('<div class="card balanced-card">', unsafe_allow_html=True)
-        fig = px.pie(platform_mix, names="platform", values="gmv_incl_shipping_tax", hole=0.55, title="GMV Mix by Platform")
-        fig.update_traces(textinfo="percent+label")
-        fig.update_layout(
-            showlegend=True,
-            legend=dict(orientation="h", y=-0.08, x=0.5, xanchor="center"),
-            margin=dict(l=10, r=10, t=52, b=28),
-            height=360,
-            paper_bgcolor="white",
-            plot_bgcolor="white",
-        )
-        st.plotly_chart(fig, use_container_width=True)
-        st.markdown("</div>", unsafe_allow_html=True)
+        with st.container(border=True):
+            fig = px.pie(platform_mix, names="platform", values="gmv_incl_shipping_tax", hole=0.55, title="GMV Mix by Platform")
+            fig.update_traces(textinfo="percent+label")
+            fig.update_layout(
+                showlegend=True,
+                legend=dict(orientation="h", y=-0.12, x=0.5, xanchor="center"),
+                margin=dict(l=4, r=4, t=48, b=36),
+                height=330,
+                paper_bgcolor="white",
+                plot_bgcolor="white",
+            )
+            st.plotly_chart(fig, use_container_width=True)
 
     st.markdown('<div class="section-title">Platform Pillars</div>', unsafe_allow_html=True)
     pillars = platform_summary(fact_order, target_table, month_key)
@@ -298,16 +402,22 @@ def business_overview(fact_order: pd.DataFrame, target_table: pd.DataFrame):
     for idx, platform in enumerate(PLATFORM_ORDER):
         item = pillars[pillars["platform"].eq(platform)]
         row = item.iloc[0] if not item.empty else pd.Series({"gmv": 0, "orders": 0, "aov": 0, "target_gmv": 0, "achievement": pd.NA})
+        achievement_width = max(0, min((0 if pd.isna(row["achievement"]) else float(row["achievement"])), 1)) * 100
         with cols[idx]:
-            st.markdown('<div class="card">', unsafe_allow_html=True)
-            st.markdown(f'<div class="pillar-title">{platform}</div>', unsafe_allow_html=True)
-            a, b, c = st.columns(3)
-            a.metric("GMV", money(row["gmv"]))
-            b.metric("Orders", number(row["orders"]))
-            c.metric("AOV", money(row["aov"], 2))
-            progress_bar("Achievement", row["achievement"])
-            st.caption(f"Target {money(row['target_gmv'])}")
-            st.markdown("</div>", unsafe_allow_html=True)
+            st.markdown(
+                f"""
+                <div class="platform-card">
+                    <div class="pillar-title">{platform}</div>
+                    <div class="metric-line"><span>GMV</span><span class="metric-value">{money(row["gmv"])}</span></div>
+                    <div class="metric-line"><span>Orders</span><span class="metric-value">{number(row["orders"])}</span></div>
+                    <div class="metric-line"><span>AOV</span><span class="metric-value">{money(row["aov"], 2)}</span></div>
+                    <div class="progress-row" style="margin-top:12px"><span>Achievement</span><strong>{pct(row["achievement"])}</strong></div>
+                    <div class="progress-track"><div class="progress-fill" style="width:{achievement_width:.1f}%"></div></div>
+                    <div class="kpi-sub">Target {money(row["target_gmv"])}</div>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
 
 
 def donut(df: pd.DataFrame, names: str, values: str, title: str):
@@ -499,6 +609,8 @@ def product_quadrant(product_expanded: pd.DataFrame, unit_economics: pd.DataFram
 
 
 st.title("Wei Long North America Management Review")
+startup_diagnostics = collect_startup_diagnostics()
+show_startup_diagnostics(startup_diagnostics)
 
 with st.sidebar:
     if st.button("Run Data Pipeline", type="primary"):
@@ -508,28 +620,51 @@ with st.sidebar:
             st.cache_data.clear()
         st.success("Pipeline complete.")
 
-data_path = resolve_master_data_path()
-data = load_master_data(data_path)
-if not data:
-    st.warning("No master data workbook was found.")
+try:
+    data_path, build_message, pipeline_stdout, pipeline_stderr = build_master_data_if_missing()
+    if pipeline_stdout or pipeline_stderr:
+        show_pipeline_logs(pipeline_stdout, pipeline_stderr)
+except PipelineExecutionError as exc:
+    st.error("Pipeline failed before output/master_data.xlsx could be generated.")
+    show_pipeline_logs(exc.stdout_text, exc.stderr_text)
+    st.subheader("Pipeline Error")
+    st.exception(exc.original)
+    st.subheader("Full Traceback")
+    st.code(exc.traceback_text)
+    st.stop()
+except Exception as exc:
+    st.error("Unable to generate output/master_data.xlsx from the repository data files.")
     st.markdown(
         """
-        本地运行请先执行：
+        请确认 GitHub 仓库根目录已上传这些真实经营数据文件：
 
-        ```bash
-        python run_pipeline.py
+        ```text
+        amazon_settlement.csv
+        tiktok_settlement.xlsx
+        temu_settled.xlsx
+        temu_unsettled.xlsx
+        temu_order_info.csv
+        temu_warehouse.xlsx
+        sku master.xlsx
+        sku_master.xlsx
+        target_table.xlsx
         ```
-
-        Streamlit Community Cloud 部署时，请上传脱敏后的 `output/master_data.xlsx`，
-        或保留仓库根目录的 `sample_master_data.xlsx` 作为 Demo 数据。
         """
     )
+    st.exception(exc)
+    st.stop()
+
+data = load_master_data(data_path)
+if not data:
+    st.error(f"Could not read master data workbook: {data_path}")
     st.stop()
 
 if data_path.name == "sample_master_data.xlsx":
-    st.sidebar.info("Using sample_master_data.xlsx for demo deployment.")
+    st.sidebar.warning("Using sample_master_data.xlsx fallback.")
 else:
     st.sidebar.caption(f"Data source: {data_path}")
+if build_message:
+    st.sidebar.success(build_message)
 
 fact_order = ensure_date(data.get("Fact_Order", pd.DataFrame()))
 fact_product = ensure_date(data.get("Fact_Product", pd.DataFrame()))

@@ -3,8 +3,20 @@ from pathlib import Path
 
 
 ROOT_DIR = Path(os.environ.get("WL_BI_ROOT", Path(__file__).resolve().parents[1])).expanduser().resolve()
-RAW_DIR = ROOT_DIR / "raw_data" if (ROOT_DIR / "raw_data").exists() else ROOT_DIR / "raw_data:"
-CONFIG_DIR = ROOT_DIR / "config" if (ROOT_DIR / "config").exists() else ROOT_DIR / "config:"
+RAW_DIR = (
+    ROOT_DIR / "raw_data"
+    if (ROOT_DIR / "raw_data").exists()
+    else ROOT_DIR / "raw_data:"
+    if (ROOT_DIR / "raw_data:").exists()
+    else ROOT_DIR
+)
+CONFIG_DIR = (
+    ROOT_DIR / "config"
+    if (ROOT_DIR / "config").exists()
+    else ROOT_DIR / "config:"
+    if (ROOT_DIR / "config:").exists()
+    else ROOT_DIR
+)
 OUTPUT_DIR = ROOT_DIR / "output"
 
 MASTER_DATA_PATH = OUTPUT_DIR / "master_data.xlsx"
