@@ -137,7 +137,8 @@ def collect_startup_diagnostics() -> dict[str, object]:
     cwd = Path.cwd()
     cwd_files = sorted(path.name for path in cwd.iterdir())
     root_files = sorted(path.name for path in ROOT_DIR.iterdir())
-    checks = {name: (cwd / name).exists() or (ROOT_DIR / name).exists() for name in REQUIRED_REPO_FILES}
+    checks = {"output/master_data.xlsx": MASTER_DATA_PATH.exists()}
+    checks.update({name: (cwd / name).exists() or (ROOT_DIR / name).exists() for name in REQUIRED_REPO_FILES})
     diagnostics = {
         "cwd": str(cwd),
         "root_dir": str(ROOT_DIR),
@@ -162,7 +163,7 @@ def collect_startup_diagnostics() -> dict[str, object]:
 
 
 def show_startup_diagnostics(diagnostics: dict[str, object]) -> None:
-    with st.expander("Startup Diagnostics", expanded=True):
+    with st.expander("Startup Diagnostics", expanded=False):
         st.write("Current working directory:", diagnostics["cwd"])
         st.write("App root directory:", diagnostics["root_dir"])
         st.write("Master data path:", diagnostics["master_data_path"])
@@ -620,39 +621,45 @@ with st.sidebar:
             st.cache_data.clear()
         st.success("Pipeline complete.")
 
-try:
-    data_path, build_message, pipeline_stdout, pipeline_stderr = build_master_data_if_missing()
-    if pipeline_stdout or pipeline_stderr:
-        show_pipeline_logs(pipeline_stdout, pipeline_stderr)
-except PipelineExecutionError as exc:
-    st.error("Pipeline failed before output/master_data.xlsx could be generated.")
-    show_pipeline_logs(exc.stdout_text, exc.stderr_text)
-    st.subheader("Pipeline Error")
-    st.exception(exc.original)
-    st.subheader("Full Traceback")
-    st.code(exc.traceback_text)
-    st.stop()
-except Exception as exc:
-    st.error("Unable to generate output/master_data.xlsx from the repository data files.")
-    st.markdown(
-        """
-        请确认 GitHub 仓库根目录已上传这些真实经营数据文件：
+build_message = None
+pipeline_stdout = ""
+pipeline_stderr = ""
+if MASTER_DATA_PATH.exists():
+    data_path = MASTER_DATA_PATH
+else:
+    try:
+        data_path, build_message, pipeline_stdout, pipeline_stderr = build_master_data_if_missing()
+        if pipeline_stdout or pipeline_stderr:
+            show_pipeline_logs(pipeline_stdout, pipeline_stderr)
+    except PipelineExecutionError as exc:
+        st.error("Pipeline failed before output/master_data.xlsx could be generated.")
+        show_pipeline_logs(exc.stdout_text, exc.stderr_text)
+        st.subheader("Pipeline Error")
+        st.exception(exc.original)
+        st.subheader("Full Traceback")
+        st.code(exc.traceback_text)
+        st.stop()
+    except Exception as exc:
+        st.error("Unable to generate output/master_data.xlsx from the repository data files.")
+        st.markdown(
+            """
+            请确认 GitHub 仓库根目录已上传这些真实经营数据文件：
 
-        ```text
-        amazon_settlement.csv
-        tiktok_settlement.xlsx
-        temu_settled.xlsx
-        temu_unsettled.xlsx
-        temu_order_info.csv
-        temu_warehouse.xlsx
-        sku master.xlsx
-        sku_master.xlsx
-        target_table.xlsx
-        ```
-        """
-    )
-    st.exception(exc)
-    st.stop()
+            ```text
+            amazon_settlement.csv
+            tiktok_settlement.xlsx
+            temu_settled.xlsx
+            temu_unsettled.xlsx
+            temu_order_info.csv
+            temu_warehouse.xlsx
+            sku master.xlsx
+            sku_master.xlsx
+            target_table.xlsx
+            ```
+            """
+        )
+        st.exception(exc)
+        st.stop()
 
 data = load_master_data(data_path)
 if not data:
