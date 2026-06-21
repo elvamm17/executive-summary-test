@@ -110,12 +110,26 @@ st.markdown(
 )
 
 
-@st.cache_data(show_spinner=False)
 def load_master_data(path: Path) -> dict[str, pd.DataFrame]:
     if not path.exists():
-        return {}
+        output_dir = path.parent
+        cwd_files = sorted(p.name for p in Path.cwd().iterdir())
+        output_files = sorted(p.name for p in output_dir.iterdir()) if output_dir.exists() else []
+        raise FileNotFoundError(
+            f"Master data workbook not found: {path}\n"
+            f"cwd: {Path.cwd()}\n"
+            f"cwd files: {cwd_files}\n"
+            f"output dir: {output_dir}\n"
+            f"output exists: {output_dir.exists()}\n"
+            f"output files: {output_files}"
+        )
     xls = pd.ExcelFile(path)
-    return {sheet: pd.read_excel(path, sheet_name=sheet) for sheet in xls.sheet_names}
+    if not xls.sheet_names:
+        raise ValueError(f"Master data workbook has no sheets: {path}")
+    data = {}
+    for sheet in xls.sheet_names:
+        data[sheet] = pd.read_excel(xls, sheet_name=sheet)
+    return data
 
 
 def resolve_master_data_path() -> Path:
@@ -680,7 +694,7 @@ except Exception as e:
     traceback.print_exc()
     st.stop()
 if not data:
-    st.error(f"Master data workbook opened but no sheets were loaded: {data_path}")
+    st.error(f"load_master_data returned empty data unexpectedly: {data_path}")
     st.stop()
 
 if data_path.name == "sample_master_data.xlsx":
